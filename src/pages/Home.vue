@@ -1,63 +1,105 @@
 <template>
-  <div style="text-align: center;">
-    <div style="width: 40%; min-width: 400px; margin-left: auto; margin-right: auto;">
-      <label for="file">
-        <div class="btn-upload">파일 업로드하기</div>
-      </label>
-      <input id="file" type="file" accept="video/*" />
-      <video id="video"></video>
-
-      <button @click="upload">분석하기</button>
-
-      <div class="result" v-if="result">
-        <div style="font-size: 1.5em; text-align: left; margin-bottom: 1em;">
-          결과
-        </div>
-
-        <div style="font-size: 1.2em; text-align: left; margin-bottom: 1em;">
-          오른팔의 삼각형 유지와 보조 팔 동작 진단
-        </div>
-
-        <img src="../../../server/result1.jpg" />
-
-        <div class="explanation">
-          오른쪽 어깨, 팔의 삼각형 유사도 : {{ feature1.similarity_right  }}%
-        </div>
-        <div class="explanation">
-          보조 팔 동작 유사도 : {{ feature1.similarity_left  }}%
-        </div>
-        <div class="explanation" v-if="!feature1.is_left_up">
-          타구할 때 보조 팔을 더 올려서 공을 가리켜 보세요
+  <div style="text-align: center; padding-bottom: 5em;">
+    <div style="width: 100%; background-color: #f5f5f5;">
+      <img class="heading-image" src="../assets/logo.png" />
+      <div class="heading">
+        Your Badminton Swing
+        <br />
+        is Bad.
+      </div>
+    </div>
+    <div style="width: 100%; background-color: #f5f5f5; display: flex; padding-bottom: 5em;">
+      <div style="width: 100%; color: #919396; font-size: 1.3em; font-weight: 600;">
+        카메라 앞에서 스윙해보세요! 스윙의 문제점을 찾아 드릴게요<br />
+        자세뿐만 아니라 셔틀콕과 라켓까지 인식해서 분석해 드려요<br />
+        이제 자세 때문에 다치지 말고 건강하게 좋은 실력으로 경기할 수 있어요<br />
+        <label for="file">
+          <div class="btn-upload">사용해보기</div>
+        </label>
+      </div>
+    </div>
+    <input hidden id="file" type="file" accept="video/*" />
+    <div style="width: 100%;">
+      <div class="feature">
+        <img style="width: 45%; box-shadow: 0 0 4px 0;" src="../assets/advantage1.jpg" />
+        <div style="width: 10%;" />
+        <div style="width: 30%; text-align: left;">
+          <div style="color: #9d9ea0; font-family: 'Poppins'; margin-bottom: 1em;">
+            Pose Estimation
+          </div>
+          <div style="font-weight: 600; color: #3f4144; font-size: 2em; margin-bottom: 1em;">
+            자세 유사도 기반 분석
+          </div>
+          <div style="color: #9d9ea0;">
+            국가대표 스윙과의 자세 유사도를 기반으로 자세가 올바른 지 평가할 수 있습니다
+          </div>
         </div>
       </div>
 
-      <div id="loading" v-show="loading" />
+      <div class="feature">
+        <div style="width: 15%" />
+        <div style="width: 30%; text-align: left;">
+          <div style="color: #9d9ea0; font-family: 'Poppins'; margin-bottom: 1em;">
+            Object Detection
+          </div>
+          <div style="font-weight: 600; color: #3f4144; font-size: 2em; margin-bottom: 1em;">
+            셔틀콕과 라켓을 인식
+          </div>
+          <div style="color: #9d9ea0;">
+            셔틀콕과 라켓을 직접 인식하여 사용자의 타점을 기준으로 백스윙 자세, 타구 자세, 타구 전후 팔꿈치와 손목 등 다양한 문제를 진단합니다
+          </div>
+        </div>
+        <div style="width: 10%;" />
+        <img style="width: 45%; box-shadow: 0 0 4px 0;" src="../assets/advantage2.png" />
+      </div>
     </div>
+
+    <div id="loading" v-show="loading" />
   </div>
 </template>
 
 <script>
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from '@/axios';
 
 export default {
     setup() {
       onMounted(() => {
         const inputFile = document.getElementById("file");
-        const video = document.getElementById("video");
 
         inputFile.addEventListener("change", function() {
-          const file = inputFile.files[0];
-          const videoUrl = URL.createObjectURL(file);
-          console.log(videoUrl);
-          video.setAttribute("src", videoUrl);
-          video.play();
+          inputFile.files[0];
+          upload();
+          // testUpload();
         })
       })
 
+      const router = useRouter();
       const loading = ref(false);
       const result = ref(false);
-      const feature1 = ref({});
+
+
+      const testUpload = async () => {
+        const similarity_right = 95;
+        const is_left_up = true;
+        const similarity_hit = 95;
+        const is_elbow_ok = true;
+        const is_elbow_ok_after = true;
+        const is_wrist_used = -1;
+
+        router.push({
+          name: "Result",
+          query: {
+            similarity_right: similarity_right,
+            is_left_up: is_left_up,
+            similarity_hit: similarity_hit,
+            is_elbow_ok: is_elbow_ok,
+            is_elbow_ok_after: is_elbow_ok_after,
+            is_wrist_used: is_wrist_used,
+          }
+        })
+      }
 
       const upload = async () => {
         loading.value = true;
@@ -72,9 +114,28 @@ export default {
         )
           .then((res) => {
             if(res.data.result === "ok") {
-              feature1.value = res.data;
-              feature1.value.similarity_right = Math.round(feature1.value.similarity_right * 100);
-              feature1.value.similarity_left = Math.round(feature1.value.similarity_left * 100);
+              const similarity_right = Math.round(res.data.similarity_right * 100);
+              const max2 = Math.round(res.data.max2 * 100);
+              const is_left_up = res.data.is_left_up;
+              const last_cock_frames = res.data.last_cock_frames;
+              const is_hit_timing = res.data.is_hit_timing;
+              const is_elbow_ok = res.data.is_elbow_ok;
+              const is_elbow_ok_after = res.data.is_elbow_ok_after;
+              const is_wrist_used = res.data.is_wrist_used;
+
+              router.push({
+                name: "Result",
+                query: {
+                  similarity_right: similarity_right,
+                  max2: max2,
+                  is_left_up: is_left_up,
+                  last_cock_frames: last_cock_frames,
+                  is_hit_timing: is_hit_timing,
+                  is_elbow_ok: is_elbow_ok,
+                  is_elbow_ok_after: is_elbow_ok_after,
+                  is_wrist_used: is_wrist_used,
+                }
+              })
             } else {
               console.log(res.data);
               return;
@@ -88,22 +149,14 @@ export default {
         upload,
         loading,
         result,
-        feature1,
+        testUpload,
       }
     }
 }
 </script>
 
 <style scoped>
-video {
-  width: 100%;
-  height: auto;
-  min-width: 400px;
-  aspect-ratio: 16/9;
-  box-shadow: 0 0 10px 0 gray;
-}
-
-img {
+.result {
   width: 100%;
   height: auto;
   min-width: 400px;
@@ -139,28 +192,30 @@ button {
   width: 150px;
   height: 30px;
   background: #fff;
-  border: 1px solid rgb(77,77,77);
-  border-radius: 10px;
+  border: 1px solid #3f4144;
+  border-radius: 15px;
+  color: #3f4144;
+  font-size: 0.8em;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 2em auto 2em auto;
+  margin: 1em auto 0 auto;
 }
 
 .btn-upload:hover {
   width: 150px;
   height: 30px;
-  background: #fff;
-  border: 1px solid rgb(77,77,77);
-  border-radius: 10px;
+  border: 1px solid #3f4144;
+  border-radius: 15px;
+  font-size: 0.8em;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgb(77,77,77);
+  background: #3f4144;
   color: #fff;
 }
 
@@ -189,7 +244,27 @@ button {
   to { -webkit-transform: rotate(360deg); }
 }
 
-.explanation {
-  margin-bottom: 2em;
+.feature {
+  width: 70%;
+  display: flex;
+  margin: auto;
+  background-color: white;
+  padding: 4em 0 0 0;
+}
+
+.heading {
+  font-family: 'Poppins';
+  width: 100%;
+  background-color: #f5f5f5;
+  font-size: 5em;
+  color: #3f4144;
+}
+
+.heading-image {
+  margin-top: 3em;
+  background-color: #f5f5f5;
+  width: 90px;
+  height: auto;
+  object-fit: scale-down;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <Navbar />
-  <div style="height: 3.75em; width: 100%" />
+  <div style="height: 3.75em; width: 100%; background-color: #f5f5f5;" />
   <router-view />
 </template>
 
@@ -17,5 +17,9 @@ export default {
 <style>
 #app {
   font-family: 'Noto Sans KR';
+}
+
+body {
+  margin: 0;
 }
 </style>
